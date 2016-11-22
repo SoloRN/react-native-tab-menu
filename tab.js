@@ -1,12 +1,11 @@
-var React = require('react-native');
-var {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  } = React;
-
+import React,{Component} from 'react';
+import {
+    StyleSheet,
+    Text,
+    View,
+    ScrollView,
+    TouchableOpacity,
+} from 'react-native';
 
 //设定内置的属性
 //选中项，例如：_type_0_2 表示第一个Tab选中，并且第二个Tab中的第三项选中
@@ -16,13 +15,17 @@ var prefixType = '_type_';
 var prefixStyle = '_style_';
 
 //默认左侧选中的背景颜色
-var defaultBackgroundColor = {backgroundColor:'#fff'};
+var defaultBackgroundColor = {backgroundColor:'#fff',color:'#4DB8C8'};
+//默认右侧选中的背景颜色
+var defaultRightBackgroundColor = {backgroundColor:'#4DB8C8',color:'white'};
 
 var MenuList = React.createClass({
   getInitialState: function(){
     var data = this.props.data;
     //左侧选择的index
     var nSelected = this.props.nSelected;
+    //右侧选择的index
+    var rightSelected = this.props.rightSelected;
     //头部选择的index
     var tabSelected = this.props.tabSelected;
     var obj = {};
@@ -36,7 +39,7 @@ var MenuList = React.createClass({
         obj[type] = false;
         obj[style] = {};
         //设定默认选中项
-        if(nSelected === cIndex && tabSelected === kIndex){
+        if(nSelected === cIndex && tabSelected === kIndex ){
           obj[type] = true;
           obj[style] = defaultBackgroundColor;
         }
@@ -46,6 +49,7 @@ var MenuList = React.createClass({
     }
     obj.tabSelected = tabSelected;
     obj.nSelected = nSelected;
+    obj.rightSelected = rightSelected;
     return obj;
   },
   render: function(){
@@ -79,15 +83,19 @@ var MenuList = React.createClass({
     for(var i in data){
       var tabStyle = null;
       if(tabIndex === tabSelected){
-        tabStyle=[styles.header_text, styles.active_blue];
+        // tabStyle=[styles.header_text, styles.active_blue];
+        tabStyle = [styles.header_text];
       }else{
         tabStyle = [styles.header_text];
       }
       header.push(
-        <TouchableOpacity style={[styles.flex_1, styles.center]}
-                          onPress={this.headerPress.bind(this, i)}>
-          <Text style={tabStyle}>{i}</Text>
-        </TouchableOpacity>
+        // {/*<TouchableOpacity style={[styles.flex_1, styles.center]}*/}
+        //                   {/*onPress={this.headerPress.bind(this, i)}>*/}
+        //   {/*<Text style={tabStyle}>{i}</Text>*/}
+        // {/*</TouchableOpacity>*/}
+          <View style={[styles.flex_1, styles.center]}>
+            <Text style={tabStyle}>{i}</Text>
+          </View>
       );
       tabIndex ++;
     }
@@ -119,6 +127,7 @@ var MenuList = React.createClass({
     var data = this.props.data;
     var tabSelected = this.state.tabSelected;
     var nSelected = this.state.nSelected;
+    var rightSelected = this.state.rightSelected;
     var index = 0;
     var rightPannel = [];
     for(var i in data){
@@ -126,8 +135,13 @@ var MenuList = React.createClass({
         for(var k in data[i]){
           if(this.state[prefixType + i + '_' + k]){
             for(var j in data[i][k]){
+
+              var style = j === rightSelected ? defaultRightBackgroundColor : null;
               rightPannel.push(
-                <Text onPress={this.props.click.bind(this, data[i][k][j])} style={styles.left_row}>{data[i][k][j]}</Text>);
+                <Text onPress={this.rightPress.bind(this,i,k,j)}
+                      style={[styles.left_row,style]}>{data[i][k][j]}
+                </Text>
+              );
             }
             break;
           }
@@ -136,6 +150,11 @@ var MenuList = React.createClass({
       index ++;
     }
     return rightPannel;
+  },
+  //点击右侧
+  rightPress:function (i,k,j) {
+    this.props.click(k,this.props.data[i][k][j]);
+    this.setState({rightSelected:j})
   },
   //点击左侧，展示右侧二级菜单
   leftPress: function(tabIndex, nIndex){
@@ -155,6 +174,7 @@ var MenuList = React.createClass({
     }
     obj[prefixType + tabIndex + '_' + nIndex] = true;
     obj[prefixStyle + tabIndex + '_' + nIndex] = defaultBackgroundColor;
+    obj['rightSelected'] = 0;//重置右边选择
     this.setState(obj);
   },
   //头部点击事件即Tab切换事件
@@ -187,11 +207,12 @@ var MenuList = React.createClass({
 
 var styles = StyleSheet.create({
   container:{
-    height:240,
-    flex:1,
-    borderTopWidth:1,
-    borderBottomWidth:1,
-    borderColor:'#ddd'
+    height:250,
+    marginTop:20,
+    marginLeft:20,
+    marginRight:20,
+    borderRadius:10,
+    overflow:'hidden',
   },
   row:{
     flexDirection: 'row'
@@ -200,7 +221,7 @@ var styles = StyleSheet.create({
     flex:1
   },
   header:{
-    height:35,
+    height:40,
     borderBottomWidth:1,
     borderColor:'#DFDFDF',
     backgroundColor:'#F5F5F5'
@@ -217,13 +238,14 @@ var styles = StyleSheet.create({
     backgroundColor:'#F2F2F2',
   },
   left_row:{
-    height:30,
-    lineHeight:20,
-    fontSize:14,
-    color:'#7C7C7C',
+    height:40,
+    lineHeight:40,
+    fontSize:15,
+    color:'#666666',
+    textAlign:'center',
   },
   right_pannel:{
-    marginLeft:10
+    backgroundColor:'white',
   },
   active_blue:{
     color: '#00B7EB'
